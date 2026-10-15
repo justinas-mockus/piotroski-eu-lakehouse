@@ -12,7 +12,7 @@ dev = [
     "pytest",
     "ruff",
     "pre-commit",
-    "pyspark",
+    "pyspark~=4.2.0",
 ]
 
 [tool.pytest.ini_options]

@@ -25,4 +25,4 @@ Piotroski F-scores for one EU country (Denmark, ADR-002) from ESEF filings, on D
 
 ## Status
 
-- Read docs/PLAN.md first; checkboxes are the status; current day: N.
+- Read docs/PLAN.md first; checkboxes are the status; current day: 2.
