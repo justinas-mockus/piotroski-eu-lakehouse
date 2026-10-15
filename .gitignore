@@ -218,3 +218,21 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Data: never commit downloaded filings or extracts
+data/
+*.zip
+*.jsonl
+*.json
+!tests/fixtures/**
+
+# Databricks local state
+.databricks/
+.databricks-connect
+
+# Secrets
+.env
+*.databrickscfg
+
+# Private notes
+docs/interview-notes.md
