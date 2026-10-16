@@ -26,8 +26,8 @@ Schemas and volumes inside that catalog can be created with the CLI (`databricks
 ## Decision
 
 - One catalog per target: `piotroski_dev` and `piotroski_prod`. Inside each catalog, the schemas have the same names: `bronze`, `silver`, `gold`.
-- The landing volume is `<catalog>.bronze.landing`. Path layout: `/Volumes/<catalog>/bronze/landing/<source>/ingest_date=YYYY-MM-DD/`. The sources are `esef`, `lei_isin` and `exchange_listing`.
-- Catalogs are created with `CREATE CATALOG IF NOT EXISTS` in SQL, never in the UI. The statement is sent from the CLI through the Statement Execution API: `databricks api post /api/2.0/sql/statements --json '{"warehouse_id": "<id>", "statement": "CREATE CATALOG IF NOT EXISTS piotroski_dev"}'`. `databricks warehouses list` gives the warehouse id. Do not commit the id. Schemas and the volume move into `databricks.yml` on Day 3, with the catalog name as a per-target variable.
+- The landing volume is `<catalog>.bronze.landing`. Path layout: `/Volumes/<catalog>/bronze/landing/<source>/ingest_date=YYYY-MM-DD/`. The sources are `esef`, `lei_isin` and `openfigi` (ADR-008; `exchange_listing` holds the dropped Nasdaq screener export).
+- Catalogs are created with `CREATE CATALOG IF NOT EXISTS` in SQL, never in the UI. The statement is sent from the CLI through the Statement Execution API: `databricks api post /api/2.0/sql/statements --json '{"warehouse_id": "<id>", "statement": "CREATE CATALOG IF NOT EXISTS piotroski_dev"}'`. `databricks warehouses list` gives the warehouse id. Do not commit the id. Schemas and the volume move into `databricks.yml` on Day 6 (see Consequences); the catalog name is already a per-target variable.
 - `piotroski_dev` was created on 2026-10-16. `piotroski_prod` is created the same way before the first prod deploy (Day 6).
 
 ## Alternatives considered
@@ -40,5 +40,14 @@ Schemas and volumes inside that catalog can be created with the CLI (`databricks
 
 - Isolation is the catalog name only. The same pipeline code runs in both targets with a different `catalog` variable.
 - One step sits outside the bundle: the `CREATE CATALOG` statement. It is idempotent and recorded here.
-- Day 3: check whether the bundle `catalogs` resource works on Free Edition. It probably calls the same REST API and fails with the same error. If it fails, keep the SQL bootstrap and record that here.
+- Day 3 check (2026-10-16): the bundle `catalogs` resource calls the same REST API and fails the same way. The SQL bootstrap stays. Dev mode does not prefix catalog names (`validate -o json` showed `piotroski_probe` unchanged).
+
+  ```text
+  $ databricks bundle deploy -t dev
+  Error: cannot create resources.catalogs.probe: Metastore storage root URL does not exist.
+  Default Storage is enabled in your account. [...] (400 INVALID_STATE)
+  Endpoint: POST https://<workspace>/api/2.1/unity-catalog/catalogs
+  ```
+
+- Schemas and the landing volume stay outside the bundle until Day 6. They already exist (created with the CLI), and moving them means binding the existing objects (`databricks bundle deployment bind`) plus checking dev-mode naming. Nothing on Day 3 needs it.
 - The upload script takes the catalog as an argument (default `piotroski_dev`).

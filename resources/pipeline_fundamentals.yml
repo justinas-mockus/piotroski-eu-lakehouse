@@ -1,0 +1,12 @@
+resources:
+  pipelines:
+    fundamentals:
+      name: piotroski_fundamentals
+      catalog: ${var.catalog}
+      schema: bronze
+      serverless: true
+      configuration:
+        landing_root: /Volumes/${var.catalog}/bronze/landing
+      libraries:
+        - file:
+            path: ../pipelines/bronze.py

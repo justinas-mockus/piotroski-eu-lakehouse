@@ -1,0 +1,16 @@
+bundle:
+  name: piotroski-eu-lakehouse
+
+include:
+  - resources/*.yml
+
+variables:
+  catalog:
+    description: Unity Catalog catalog for this target (ADR-003)
+
+targets:
+  dev:
+    mode: development
+    default: true
+    variables:
+      catalog: piotroski_dev
