@@ -136,7 +136,7 @@ Each day ends with a merged PR to `main`. If a day overruns by more than 2 hours
 ### Day 2 (Thu Oct 15): extraction to landing
 
 - [x] `extract/esef_filings.py`: page through the API filtered by country, download each filing's xBRL-JSON, write `manifest.jsonl` (LEI, period end, filing id, URL, sha256, downloaded\_at).
-- [x] Idempotency: skip filings already in the manifest. Retry with backoff. Polite rate limit (1 request/s).
+- [x] Idempotency: skip filings already in the manifest. Retry with backoff (file downloads; a failed listing page stops the run, and a rerun resumes from the manifest). Polite rate limit (1 request/s).
 - [x] `extract/gleif_isin.py` and the exchange list CSV (a manual download is fine; record the date). The exchange list has no ISIN or ticker, so choosing that source moves to Day 3.
 - [x] Create a UC volume `landing` per target; upload with `databricks fs cp -r`. Layout: `/Volumes/<catalog>/<schema>/landing/esef/ingest_date=YYYY-MM-DD/`. Done for `dev`; `prod` is created before the first prod deploy (ADR-003).
 
