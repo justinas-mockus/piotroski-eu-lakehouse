@@ -1,8 +1,7 @@
 from pyspark import pipelines as dp
 from pyspark.sql import SparkSession
-from pyspark.sql import functions as F
 
-import piotroski  # noqa: F401  (smoke check: wheel installed; removed when with_lineage moves)
+from piotroski.lineage import with_lineage
 
 spark = SparkSession.active()
 LANDING_ROOT = spark.conf.get("landing_root")
@@ -19,19 +18,6 @@ def esef_filing_raw():
         .withColumnRenamed("value", "raw_json")
     )
     return with_lineage(raw).select("raw_json", "source_file", "ingest_date", "ingested_at")
-
-
-def with_lineage(df):
-    return (
-        df.withColumn("source_file", F.col("_metadata.file_path"))
-        .withColumn(
-            "ingest_date",
-            F.try_to_date(
-                F.regexp_extract("_metadata.file_path", r"ingest_date=(\d{4}-\d{2}-\d{2})", 1)
-            ),
-        )
-        .withColumn("ingested_at", F.current_timestamp())
-    )
 
 
 def csv_stream(source: str):
