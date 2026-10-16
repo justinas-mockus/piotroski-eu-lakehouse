@@ -53,7 +53,8 @@ Record the output verbatim in ADR-001. The design works either way. Default: **e
 | --- | --- | --- | --- |
 | [filings.xbrl.org API](https://filings.xbrl.org/docs/about) | ESEF annual reports as xBRL-JSON, indexed by LEI, period and country | Primary fundamentals (MVP) | Not complete coverage. IFRS tags plus company extensions. Each filing has current and prior year, so one filing yields both Piotroski periods. |
 | GLEIF LEI–ISIN mapping file | LEI → ISIN | Join key to tickers (MVP) | Many-to-many (one LEI, many ISINs). Needs a dedup rule. |
-| Exchange equity list for the chosen country (e.g. the Euronext or Nasdaq Nordic listings download) | ISIN, ticker, market, sector | Universe and ticker (MVP) | Manual CSV download. Store the snapshot date. |
+| ~~Exchange equity list for the chosen country~~ (replaced by OpenFIGI, ADR-008) | ISIN, ticker, market, sector | Universe and ticker (MVP) | The Nasdaq Copenhagen screener export has no ISIN or ticker. |
+| [OpenFIGI mapping API](https://www.openfigi.com/api/documentation) | ISIN → FIGI, ticker, exchange code, security type | Ticker per listing (MVP, best-effort, ADR-008) | Free; 25 req/min without a key. Bloomberg-style tickers. Listed equities only by default. |
 | ECB FX reference rates | Daily EUR crosses | Currency normalisation (MVP if the country isn't euro) | Only matters for non-EUR filers. |
 | Stooq | Daily prices | Post-MVP (market cap, Magic Formula) | Unofficial, can change without notice. |
 | Rate-limited fundamentals API (FMP / EODHD / Alpha Vantage free tier) | Per-ticker statements | Post-MVP source #3, a cross-check | Free tiers have small daily quotas. Check current terms and don't publish their data in the repo. |
@@ -142,12 +143,14 @@ Each day ends with a merged PR to `main`. If a day overruns by more than 2 hours
 
 ### Day 3 (Fri Oct 16): bronze with Auto Loader
 
-- [ ] Bronze table `bronze.esef_filing_raw`: Auto Loader, each file read **whole as text** plus `_metadata.file_path` and ingest timestamp. Don't infer a schema from xBRL-JSON: facts are a map keyed by fact id, and inference explodes into thousands of columns → **ADR-004**.
-- [ ] Pick an ISIN/ticker source for the exchange list and record it in a new ADR. The Day 2 Nasdaq Copenhagen screener export (117 rows) has no ISIN or ticker, so it cannot join to GLEIF. Avoid joining on company name. If no source turns up within the time-box, make the ticker best-effort and say so in the ADR.
-- [ ] `bronze.lei_isin` and `bronze.exchange_listing` as plain CSV loads. The Nasdaq export has a UTF-8 BOM and price columns (out of scope; keep only what is needed).
-- [ ] First `databricks.yml` with a `dev` target; deploy from VS Code; pipeline runs green. The catalog comes from SQL `CREATE CATALOG`; check whether the bundle `catalogs` resource works on Free Edition (ADR-003). Auto Loader on `esef/` needs `pathGlobFilter="*.json"` to skip `manifest.jsonl`.
+- [x] Bronze table `bronze.esef_filing_raw`: Auto Loader, each file read **whole as text** plus `_metadata.file_path` and ingest timestamp. Don't infer a schema from xBRL-JSON: facts are a map keyed by fact id, and inference explodes into thousands of columns → **ADR-004**.
+- [x] Pick an ISIN/ticker source for the exchange list and record it in a new ADR. → **ADR-008**: OpenFIGI mapping of GLEIF `DK` ISINs, `extract/openfigi.py`. The Day 2 Nasdaq Copenhagen screener export (117 rows) has no ISIN or ticker, so it cannot join to GLEIF. Avoid joining on company name. If no source turns up within the time-box, make the ticker best-effort and say so in the ADR.
+- [x] `bronze.lei_isin` and `bronze.isin_listing` (OpenFIGI, `openfigi/`) as CSV loads. The Nasdaq screener export is dropped (ADR-008). `lei_isin/` also holds `source.json`, so filter on `*.csv`.
+- [x] First `databricks.yml` with a `dev` target; deploy from VS Code; pipeline runs green. The catalog comes from SQL `CREATE CATALOG`; check whether the bundle `catalogs` resource works on Free Edition (ADR-003). Auto Loader on `esef/` needs `pathGlobFilter="*.json"` to skip `manifest.jsonl`. Result: the bundle `catalogs` resource fails like the REST API, so the SQL bootstrap stays (ADR-003). Schemas and the volume move into the bundle on Day 6.
 
 ### Day 4 (Sat Oct 17): silver, the hard day (time-box: 6 h)
+
+- [ ] Make `src/piotroski/` importable from the pipeline source files. Bundle-deployed pipeline code does not see `src/` on its path by default (flagged on Day 3). Do this first: `concepts.py` is the first module the pipeline imports.
 
 - [ ] `silver.fact`: parse with `from_json` to `MAP<STRING, STRUCT<value, decimals, dimensions MAP>>`, explode, and keep **non-dimensional** facts only (no segment or axis members). That gives consolidated totals.
 - [ ] Parse periods: instant vs. duration. Map each to fiscal year end.
@@ -158,13 +161,14 @@ Each day ends with a merged PR to `main`. If a day overruns by more than 2 hours
 ### Day 5 (Sun Oct 18): gold and tests
 
 - [ ] `signals.py`: the 9 signals, each returning 1 / 0 / null. Null means missing input, never 0 → **ADR-005**.
-- [ ] `gold.piotroski_score`: signals, `f_score = sum of non-null`, `signals_available`, joined to ISIN and ticker.
+- [ ] `gold.piotroski_score`: signals, `f_score = sum of non-null`, `signals_available`, one row per LEI × fiscal year. Listings (ISIN, ticker) join one-to-many from `silver.isin_listing` filtered to `Common Stock`; never force 1:1 (dual-class shares, ADR-008).
 - [ ] Unit tests with hand-made fixtures: one company per edge case (all 9 met, missing gross profit, negative equity, restated year).
-- [ ] `dq.py` + `gold.dq_results`: balance-sheet identity check, % of companies with all 9 signals, unmapped LEIs.
+- [ ] `dq.py` + `gold.dq_results`: balance-sheet identity check, % of companies with all 9 signals, unmapped LEIs, % of ESEF LEIs with at least one `DC` common-stock listing (with the misses listed).
 
 ### Day 6 (Mon Oct 19): CI/CD and orchestration
 
 - [ ] `ci.yml` on PR: ruff, pytest, `databricks bundle validate -t dev`.
+- [ ] Move the `bronze`/`silver`/`gold` schemas and the landing volume into the bundle: `databricks bundle deployment bind` the existing objects, and check dev-mode naming first (ADR-003, moved from Day 3).
 - [ ] `deploy.yml` on merge to `main`: `bundle deploy -t prod`, then `bundle run` of the job. Auth via a GitHub environment secret → **ADR-006** (service principal OAuth if Free Edition allows it, otherwise a short-lived PAT; write down which and why).
 - [ ] `extract.yml`: manual `workflow_dispatch` plus a monthly cron that runs the extractor and uploads to the prod volume.
 - [ ] A job in `resources/job_daily.yml`: pipeline refresh → DQ task → failure email notification.
@@ -217,6 +221,7 @@ Write ADRs as short Markdown files in `docs/adr/NNN-title.md` with four headings
 | 005 | Missing input = null signal, never 0; `signals_available` exposed | 5 |
 | 006 | CI auth method for Free Edition | 6 |
 | 007 | Long-term debt proxy and equity-issuance definition | 4 |
+| 008 | Ticker source: OpenFIGI mapping, listing grain per ISIN | 3 |
 | 008+ | One per Free Edition limit you actually hit, with the error message | as hit |
 
 ### Commit and PR hygiene

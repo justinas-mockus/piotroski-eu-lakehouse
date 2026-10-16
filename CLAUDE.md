@@ -23,10 +23,11 @@ Piotroski F-scores for one EU country (Denmark, ADR-002) from ESEF filings, on D
 - Bundle: `databricks bundle validate -t dev`
 - Get esef filings: `uv run python -m extract.esef_filings`
 - Get gleif isins: `uv run python -m extract.gleif_isin`
+- Get tickers (after gleif): `uv run python -m extract.openfigi` (optional `OPENFIGI_API_KEY` env var)
 - Databricks: create catalog (SQL, the REST API fails on Free Edition, ADR-003): `CREATE CATALOG IF NOT EXISTS piotroski_dev`
 - Databricks: create schema: `databricks schemas create bronze piotroski_dev`
 - Databricks: create volume: `databricks volumes create piotroski_dev bronze landing MANAGED`
 
 ## Status
 
-- Read docs/PLAN.md first; checkboxes are the status; current day: 2.
+- Read docs/PLAN.md first; checkboxes are the status; current day: 3 (bronze done).
