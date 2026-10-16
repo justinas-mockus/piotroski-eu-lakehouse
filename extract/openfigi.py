@@ -1,5 +1,6 @@
 import csv
 import os
+import sys
 import time
 from datetime import date
 from pathlib import Path
@@ -23,10 +24,15 @@ def latest_lei_isin(landing_dir: Path) -> Path:
 
 
 def read_lei_by_isin(path: Path, prefix: str = ISIN_PREFIX) -> dict[str, str]:
+    lei_by_isin = {}
     with path.open(newline="") as f:
-        return {
-            row["ISIN"]: row["LEI"] for row in csv.DictReader(f) if row["ISIN"].startswith(prefix)
-        }
+        for row in csv.DictReader(f):
+            isin, lei = row["ISIN"], row["LEI"]
+            if not isin.startswith(prefix):
+                continue
+            if lei_by_isin.setdefault(isin, lei) != lei:
+                print(f"warning: {isin} maps to several LEIs; keeping the first", file=sys.stderr)
+    return lei_by_isin
 
 
 def batches(items: list, size: int):
@@ -107,10 +113,12 @@ def run(
     lei_by_isin = read_lei_by_isin(latest_lei_isin(landing_dir))
     isins = sorted(lei_by_isin)
     rows = []
+    errors = 0
     for i, chunk in enumerate(batches(isins, batch_size)):
         if i:
             sleep(delay)
         results = post_mapping(session, mapping_jobs(chunk), headers, sleep=sleep)
+        errors += sum("error" in result for result in results)
         rows.extend(parse_results(chunk, results, lei_by_isin))
 
     write_csv(rows, dest)
@@ -121,6 +129,7 @@ def run(
         "leis_sent": len(set(lei_by_isin.values())),
         "leis_matched": len({row["lei"] for row in rows}),
         "rows": len(rows),
+        "errors": errors,
     }
 
 

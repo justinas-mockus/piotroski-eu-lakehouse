@@ -42,4 +42,5 @@ GLEIF LEI–ISIN mapping for the 315 ESEF LEIs (2026-10-16 file):
 - **Survivorship bias:** mapping returns listed equities only (`includeUnlistedEquities` is false by default), so delisted companies get no ticker. This is fine for a current snapshot; it matters for any later backtest.
 - Tickers are Bloomberg-style. They do not match yfinance symbols (for example `NOVO-B.CO`) without a transformation.
 - FIGI data is free to use and redistribute. The API does not return ISINs (third-party licensing), so the extractor keeps the ISIN it sent.
-- Idempotency: one file per ingest date. A rerun on the same day is a no-op.
+- Idempotency: one file per ingest date. A rerun on the same day is a no-op. If `extract.gleif_isin` is rerun later the same day with a newer snapshot, OpenFIGI does not refresh until the next day.
+- Per-job `error` results are counted as `errors` in the run summary, so a bad batch is not read as "no match". An ISIN mapped to several LEIs in GLEIF keeps the first LEI and logs a warning.

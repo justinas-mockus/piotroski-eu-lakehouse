@@ -73,6 +73,14 @@ def test_read_lei_by_isin_keeps_only_danish_isins(tmp_path):
     assert read_lei_by_isin(path) == {"DK0000000001": "LEI_A"}
 
 
+def test_read_lei_by_isin_keeps_first_lei_and_warns_on_conflict(tmp_path, capsys):
+    path = tmp_path / "lei_isin.csv"
+    path.write_text("LEI,ISIN\nLEI_A,DK0000000001\nLEI_B,DK0000000001\n")
+
+    assert read_lei_by_isin(path) == {"DK0000000001": "LEI_A"}
+    assert "several LEIs" in capsys.readouterr().err
+
+
 class FakeResponse:
     def __init__(self, status, payload=None):
         self.status_code = status
@@ -134,6 +142,19 @@ def test_run_without_key_sends_batches_of_ten_and_no_header(tmp_path):
     assert session.posts[0][2] == {}
 
 
+def test_run_counts_error_results_separately_from_no_match(tmp_path):
+    source = tmp_path / "lei_isin" / "ingest_date=2026-10-16" / "lei_isin.csv"
+    source.parent.mkdir(parents=True)
+    source.write_text("LEI,ISIN\nLEI_A,DK0000000001\nLEI_B,DK0000000002\n")
+    results = [{"error": "Invalid idValue"}, {"warning": "No identifier found."}]
+    session = FigiSession([FakeResponse(200, results)])
+
+    result = run(session, tmp_path, "2026-10-16", sleep=lambda s: None)
+
+    assert result["errors"] == 1
+    assert result["isins_matched"] == 0
+
+
 def test_run_writes_csv_then_skips_same_day(tmp_path):
     source = tmp_path / "lei_isin" / "ingest_date=2026-10-16" / "lei_isin.csv"
     source.parent.mkdir(parents=True)
@@ -152,6 +173,7 @@ def test_run_writes_csv_then_skips_same_day(tmp_path):
         "leis_sent": 1,
         "leis_matched": 1,
         "rows": 1,
+        "errors": 0,
     }
     assert second == {"status": "skipped"}
     assert session.posts[0][0] == MAPPING_URL
