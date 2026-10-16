@@ -135,16 +135,17 @@ Each day ends with a merged PR to `main`. If a day overruns by more than 2 hours
 
 ### Day 2 (Thu Oct 15): extraction to landing
 
-- [ ] `extract/esef_filings.py`: page through the API filtered by country, download each filing's xBRL-JSON, write `manifest.jsonl` (LEI, period end, filing id, URL, sha256, downloaded\_at).
-- [ ] Idempotency: skip filings already in the manifest. Retry with backoff. Polite rate limit (1 request/s).
-- [ ] `extract/gleif_isin.py` and the exchange list CSV (a manual download is fine; record the date).
-- [ ] Create a UC volume `landing` per target; upload with `databricks fs cp -r`. Layout: `/Volumes/<catalog>/<schema>/landing/esef/ingest_date=YYYY-MM-DD/`.
+- [x] `extract/esef_filings.py`: page through the API filtered by country, download each filing's xBRL-JSON, write `manifest.jsonl` (LEI, period end, filing id, URL, sha256, downloaded\_at).
+- [x] Idempotency: skip filings already in the manifest. Retry with backoff (file downloads; a failed listing page stops the run, and a rerun resumes from the manifest). Polite rate limit (1 request/s).
+- [x] `extract/gleif_isin.py` and the exchange list CSV (a manual download is fine; record the date). The exchange list has no ISIN or ticker, so choosing that source moves to Day 3.
+- [x] Create a UC volume `landing` per target; upload with `databricks fs cp -r`. Layout: `/Volumes/<catalog>/<schema>/landing/esef/ingest_date=YYYY-MM-DD/`. Done for `dev`; `prod` is created before the first prod deploy (ADR-003).
 
 ### Day 3 (Fri Oct 16): bronze with Auto Loader
 
 - [ ] Bronze table `bronze.esef_filing_raw`: Auto Loader, each file read **whole as text** plus `_metadata.file_path` and ingest timestamp. Don't infer a schema from xBRL-JSON: facts are a map keyed by fact id, and inference explodes into thousands of columns → **ADR-004**.
-- [ ] `bronze.lei_isin` and `bronze.exchange_listing` as plain CSV loads.
-- [ ] First `databricks.yml` with a `dev` target; deploy from VS Code; pipeline runs green.
+- [ ] Pick an ISIN/ticker source for the exchange list and record it in a new ADR. The Day 2 Nasdaq Copenhagen screener export (117 rows) has no ISIN or ticker, so it cannot join to GLEIF. Avoid joining on company name. If no source turns up within the time-box, make the ticker best-effort and say so in the ADR.
+- [ ] `bronze.lei_isin` and `bronze.exchange_listing` as plain CSV loads. The Nasdaq export has a UTF-8 BOM and price columns (out of scope; keep only what is needed).
+- [ ] First `databricks.yml` with a `dev` target; deploy from VS Code; pipeline runs green. The catalog comes from SQL `CREATE CATALOG`; check whether the bundle `catalogs` resource works on Free Edition (ADR-003). Auto Loader on `esef/` needs `pathGlobFilter="*.json"` to skip `manifest.jsonl`.
 
 ### Day 4 (Sat Oct 17): silver, the hard day (time-box: 6 h)
 

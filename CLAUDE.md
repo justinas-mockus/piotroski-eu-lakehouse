@@ -21,7 +21,11 @@ Piotroski F-scores for one EU country (Denmark, ADR-002) from ESEF filings, on D
 - Lint and format: `uv run pre-commit run --all-files`
 - Update pre-commit `uv run pre-commit autoupdate`
 - Bundle: `databricks bundle validate -t dev`
-
+- Get esef filings: `uv run python -m extract.esef_filings`
+- Get gleif isins: `uv run python -m extract.gleif_isin`
+- Databricks: create catalog (SQL, the REST API fails on Free Edition, ADR-003): `CREATE CATALOG IF NOT EXISTS piotroski_dev`
+- Databricks: create schema: `databricks schemas create bronze piotroski_dev`
+- Databricks: create volume: `databricks volumes create piotroski_dev bronze landing MANAGED`
 
 ## Status
 

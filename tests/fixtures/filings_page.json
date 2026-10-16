@@ -1,0 +1,44 @@
+{
+  "data": [
+    {
+      "id": "1001",
+      "attributes": {
+        "country": "DK",
+        "period_end": "2024-12-31",
+        "error_count": 0,
+        "fxo_id": "529900TESTLEI0000001-2024-12-31-ESEF-DK-0",
+        "json_url": "/529900TESTLEI0000001/2024-12-31/ESEF/DK/0/529900TESTLEI0000001-2024-12-31-da.json"
+      }
+    },
+    {
+      "id": "1002",
+      "attributes": {
+        "country": "DK",
+        "period_end": "2023-12-31",
+        "error_count": 0,
+        "fxo_id": "529900TESTLEI0000002-2023-12-31-ESEF-DK-0",
+        "json_url": "/529900TESTLEI0000002/2023-12-31/ESEF/DK/0/529900TESTLEI0000002-2023-12-31-da.json"
+      }
+    },
+    {
+      "id": "1003",
+      "attributes": {
+        "country": "DK",
+        "period_end": "2024-12-31",
+        "error_count": 2,
+        "fxo_id": "529900TESTLEI0000003-2024-12-31-ESEF-DK-0",
+        "json_url": "/529900TESTLEI0000003/2024-12-31/ESEF/DK/0/529900TESTLEI0000003-2024-12-31-da.json"
+      }
+    },
+        {
+      "id": "1004",
+      "attributes": {
+        "country": "DK",
+        "period_end": "2024-12-31",
+        "error_count": 0,
+        "fxo_id": "529900TESTLEI0000004-2024-12-31-ESEF-DK-0",
+        "json_url": null
+      }
+    }
+  ]
+}
