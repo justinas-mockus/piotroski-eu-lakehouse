@@ -150,7 +150,8 @@ Each day ends with a merged PR to `main`. If a day overruns by more than 2 hours
 
 ### Day 4 (Sat Oct 17): silver, the hard day (time-box: 6 h)
 
-- [ ] Make `src/piotroski/` importable from the pipeline source files. Bundle-deployed pipeline code does not see `src/` on its path by default (flagged on Day 3). Do this first: `concepts.py` is the first module the pipeline imports.
+- [ ] Make `src/piotroski/` importable from the pipeline source files. Bundle-deployed pipeline code does not see `src/` on its path by default (flagged on Day 3). Do this first: `concepts.py` is the first module the pipeline imports. Then move `with_lineage` from `pipelines/bronze.py` into `src/piotroski/` with a fixture test for the `ingest_date` regex.
+- [ ] Decide how silver and gold publish next to bronze: one pipeline with fully qualified table names (`silver.fact`) or one pipeline per layer. The pipeline's default schema is `bronze`. Record the decision in ADR-003 Consequences.
 
 - [ ] `silver.fact`: parse with `from_json` to `MAP<STRING, STRUCT<value, decimals, dimensions MAP>>`, explode, and keep **non-dimensional** facts only (no segment or axis members). That gives consolidated totals.
 - [ ] Parse periods: instant vs. duration. Map each to fiscal year end.
@@ -222,7 +223,7 @@ Write ADRs as short Markdown files in `docs/adr/NNN-title.md` with four headings
 | 006 | CI auth method for Free Edition | 6 |
 | 007 | Long-term debt proxy and equity-issuance definition | 4 |
 | 008 | Ticker source: OpenFIGI mapping, listing grain per ISIN | 3 |
-| 008+ | One per Free Edition limit you actually hit, with the error message | as hit |
+| 009+ | One per Free Edition limit you actually hit, with the error message | as hit |
 
 ### Commit and PR hygiene
 

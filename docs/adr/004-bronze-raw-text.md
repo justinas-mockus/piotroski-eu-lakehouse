@@ -28,7 +28,7 @@ File sizes in the first load (866 files, 2026-10-16): minimum 7.5 KB, median 111
 ## Consequences
 
 - Bronze is replayable: silver can be rebuilt from bronze with a new schema, without touching the volume or the source APIs.
-- Re-running is idempotent. The Auto Loader checkpoint skips files already ingested (second run: no new table version).
+- Re-running is idempotent. The Auto Loader checkpoint skips files already ingested (second run: no new table version). This also holds when `extract/upload_to_volume.sh` re-uploads the whole tree with `--overwrite`, but only because `cloudFiles.allowOverwrites` defaults to false. Turning it on would re-ingest every overwritten file as duplicate rows.
 - One file is one cell. Spark's single-value limit is about 2 GB, and `from_json` memory grows with file size. If filings ever reach hundreds of MB, revisit this (parse in the extractor, or the `multiLine` JSON reader).
 - Do not `display()` `raw_json` in notebooks. Select `length(raw_json)` or a substring.
 - Adding a column to a bronze streaming table later only fills new rows. Existing rows stay null until a full refresh. The lineage columns were added on the first deploy for that reason.

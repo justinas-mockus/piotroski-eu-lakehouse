@@ -26,7 +26,7 @@ Schemas and volumes inside that catalog can be created with the CLI (`databricks
 ## Decision
 
 - One catalog per target: `piotroski_dev` and `piotroski_prod`. Inside each catalog, the schemas have the same names: `bronze`, `silver`, `gold`.
-- The landing volume is `<catalog>.bronze.landing`. Path layout: `/Volumes/<catalog>/bronze/landing/<source>/ingest_date=YYYY-MM-DD/`. The sources are `esef`, `lei_isin` and `exchange_listing`.
+- The landing volume is `<catalog>.bronze.landing`. Path layout: `/Volumes/<catalog>/bronze/landing/<source>/ingest_date=YYYY-MM-DD/`. The sources are `esef`, `lei_isin` and `openfigi` (ADR-008; `exchange_listing` holds the dropped Nasdaq screener export).
 - Catalogs are created with `CREATE CATALOG IF NOT EXISTS` in SQL, never in the UI. The statement is sent from the CLI through the Statement Execution API: `databricks api post /api/2.0/sql/statements --json '{"warehouse_id": "<id>", "statement": "CREATE CATALOG IF NOT EXISTS piotroski_dev"}'`. `databricks warehouses list` gives the warehouse id. Do not commit the id. Schemas and the volume move into `databricks.yml` on Day 6 (see Consequences); the catalog name is already a per-target variable.
 - `piotroski_dev` was created on 2026-10-16. `piotroski_prod` is created the same way before the first prod deploy (Day 6).
 
