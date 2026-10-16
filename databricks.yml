@@ -14,3 +14,9 @@ targets:
     default: true
     variables:
       catalog: piotroski_dev
+
+artifacts:
+  piotroski_wheel:
+    type: whl
+    build: uv build --wheel
+    path: .

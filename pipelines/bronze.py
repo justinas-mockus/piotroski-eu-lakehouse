@@ -2,6 +2,8 @@ from pyspark import pipelines as dp
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 
+import piotroski  # noqa: F401  (smoke check: wheel installed; removed when with_lineage moves)
+
 spark = SparkSession.active()
 LANDING_ROOT = spark.conf.get("landing_root")
 
