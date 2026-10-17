@@ -2,6 +2,7 @@ from pyspark import pipelines as dp
 from pyspark.sql import SparkSession
 
 from piotroski.fundamentals import fundamentals
+from piotroski.listings import common_stock
 from piotroski.xbrl import filing_keys, parse_facts
 
 spark = SparkSession.active()
@@ -28,3 +29,11 @@ def fact():
 )
 def silver_fundamentals():
     return fundamentals(spark.read.table("silver.fact"))
+
+
+@dp.materialized_view(
+    name="silver.isin_listing",
+    comment="Nasdaq Copenhagen common-stock listings, latest OpenFIGI snapshot (ADR-008).",
+)
+def silver_isin_listing():
+    return common_stock(spark.read.table("bronze.isin_listing"))
