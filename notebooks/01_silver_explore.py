@@ -169,3 +169,16 @@ fact.groupBy("scope").count().show()
 (fact.where((F.col("lei") == "549300DAQ1CVT6CXN342") & (F.col("concept") == "ifrs-full:Assets"))
      .select("report_period_end", "period_end", "value", "decimals", "scope")
      .orderBy("report_period_end", "period_end").show())
+
+
+# COMMAND ----------
+from pyspark.sql import functions as F
+
+(
+    spark.table("piotroski_dev.silver.fact")
+    .where(F.col("concept").rlike(r"^ifrs-full:(Revenue|ProfitLoss|Equity|Liabilities|CashFlowsFromUsedInOperat|GrossProfit|CostOfSales)"))
+    .groupBy("concept")
+    .agg(F.countDistinct("lei").alias("leis"))
+    .orderBy(F.desc("leis"))
+    .show(40, truncate=False)
+)
