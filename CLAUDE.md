@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Piotroski F-scores for one EU country (Denmark, ADR-002) from ESEF filings, on Databricks Free Edition. Source of truth: `docs/PLAN.md` and `docs/adr/`. MVP due 2026-10-20.
+Piotroski F-scores for one EU country (Denmark, ADR-002) from ESEF filings, on Databricks Free Edition. Source of truth: `docs/PLAN.md` and `docs/adr/`. MVP due 2026-10-19.
 
 ## House rules
 

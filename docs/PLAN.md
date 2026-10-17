@@ -4,7 +4,7 @@ Oct 13, 2026 · @Justinas
 
 ## Scope and MVP definition of done
 
-The MVP is due by 2026-10-20. It produces a gold table with a Piotroski F-score (0–9) for every company in one EU country, built from free ESEF filings. It is deployed to Databricks by GitHub Actions and documented well enough to walk through in a 20-minute interview.
+The MVP is due by 2026-10-19. It produces a gold table with a Piotroski F-score (0–9) for every company in one EU country, built from free ESEF filings. It is deployed to Databricks by GitHub Actions and documented well enough to walk through in a 20-minute interview.
 
 **Definition of done (all must be true by day 7):**
 
