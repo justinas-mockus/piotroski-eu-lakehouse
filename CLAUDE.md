@@ -21,6 +21,7 @@ Piotroski F-scores for one EU country (Denmark, ADR-002) from ESEF filings, on D
 - Lint and format: `uv run pre-commit run --all-files`
 - Update pre-commit `uv run pre-commit autoupdate`
 - Bundle: `databricks bundle validate -t dev`
+- Bunlde deploy: `databricks bundle deploy -t dev`
 - Get esef filings: `uv run python -m extract.esef_filings`
 - Get gleif isins: `uv run python -m extract.gleif_isin`
 - Get tickers (after gleif): `uv run python -m extract.openfigi` (optional `OPENFIGI_API_KEY` env var)
