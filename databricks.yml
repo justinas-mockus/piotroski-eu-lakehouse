@@ -20,5 +20,5 @@ targets:
 artifacts:
   piotroski_wheel:
     type: whl
-    build: uv build --wheel
+    build: rm -rf dist && uv build --wheel
     path: .

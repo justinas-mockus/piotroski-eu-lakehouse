@@ -161,10 +161,10 @@ Each day ends with a merged PR to `main`. If a day overruns by more than 2 hours
 
 ### Day 5 (Sun Oct 18): gold and tests
 
-- [ ] `signals.py`: the 9 signals, each returning 1 / 0 / null. Null means missing input, never 0 → **ADR-005**.
-- [ ] `gold.piotroski_score`: signals, `f_score = sum of non-null`, `signals_available`, one row per LEI × fiscal year. Listings (ISIN, ticker) join one-to-many from `silver.isin_listing` filtered to `Common Stock`; never force 1:1 (dual-class shares, ADR-008).
-- [ ] Unit tests with hand-made fixtures: one company per edge case (all 9 met, missing gross profit, negative equity, restated year).
-- [ ] `dq.py` + `gold.dq_results`: balance-sheet identity check, % of companies with all 9 signals, unmapped LEIs, % of ESEF LEIs with at least one `DC` common-stock listing (with the misses listed).
+- [x] `signals.py`: the 9 signals, each returning 1 / 0 / null. Null means missing input, never 0 → **ADR-005**.
+- [x] `gold.piotroski_score`: signals, `f_score = sum of non-null`, `signals_available`, one row per LEI × fiscal year. Listings (ISIN, ticker) join one-to-many from `silver.isin_listing` filtered to `Common Stock`; never force 1:1 (dual-class shares, ADR-008).
+- [x] Unit tests with hand-made fixtures: one company per edge case (all 9 met, missing gross profit, negative equity, restated year).
+- [x] `dq.py` + `gold.dq_results`: balance-sheet identity check, % of companies with all 9 signals, unmapped LEIs, % of ESEF LEIs with at least one `DC` common-stock listing (with the misses listed).
 
 ### Day 6 (Mon Oct 19): CI/CD and orchestration
 
