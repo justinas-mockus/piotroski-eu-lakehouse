@@ -182,3 +182,42 @@ from pyspark.sql import functions as F
     .orderBy(F.desc("leis"))
     .show(40, truncate=False)
 )
+
+
+# COMMAND ----------
+from pyspark.sql import functions as F
+
+fund = spark.table("piotroski_dev.silver.fundamentals")
+
+fund.agg(
+    F.count("*").alias("rows"),
+    F.countDistinct("lei").alias("leis"),
+    F.countDistinct("source_file").alias("filings"),
+).show()
+
+fund.groupBy("lei", "fiscal_year_end").count().where("count > 1").count()
+
+# COMMAND ----------
+(
+    fund.groupBy("lei").agg(F.count("*").alias("years"))
+    .groupBy("years").count().orderBy("years")
+    .show()
+)
+
+# COMMAND ----------
+fields = ["assets", "current_assets", "current_liabilities", "noncurrent_liabilities",
+          "liabilities", "equity", "revenue", "gross_profit", "cost_of_sales",
+          "profit_loss", "cfo", "proceeds_from_issuing_shares"]
+
+fund.select(
+    [F.round(F.avg(F.col(c).isNull().cast("int")) * 100, 1).alias(c) for c in fields]
+).show(vertical=True)
+
+
+# COMMAND ----------
+fund.agg(
+    F.sum("n_conflicts").alias("conflicting_fields"),
+    F.count_if(F.col("n_currencies") > 1).alias("mixed_currency_rows"),
+    F.count_if(F.col("scope") == "separate").alias("separate_scope_rows"),
+).show()
+fund.groupBy("currency").count().orderBy(F.desc("count")).show()
