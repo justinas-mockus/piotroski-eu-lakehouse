@@ -159,22 +159,22 @@ Each day ends with a merged PR to `main`. If a day overruns by more than 2 hours
 - [x] `silver.fundamentals`: one row per LEI × fiscal year, a column per canonical field, currency column, source filing id. Dedupe restatements: the newest filing wins for a given year. Result: 525 annual filings (7 trailing-twelve-month interims excluded), 815 rows for 302 LEIs (ADR-009).
 - [x] Expectations: `Assets > 0`, the currency is ISO, fiscal year within range → drop or quarantine (decide and write it down). Result: `expect_all_or_drop`; counts in the event log for Day 5 DQ.
 
-### Day 5 (Sun Oct 18): gold and tests
+### Day 5 (Sat Oct 17, a day early; the MVP date moved to Oct 19): gold and tests
 
-- [ ] `signals.py`: the 9 signals, each returning 1 / 0 / null. Null means missing input, never 0 → **ADR-005**.
-- [ ] `gold.piotroski_score`: signals, `f_score = sum of non-null`, `signals_available`, one row per LEI × fiscal year. Listings (ISIN, ticker) join one-to-many from `silver.isin_listing` filtered to `Common Stock`; never force 1:1 (dual-class shares, ADR-008).
-- [ ] Unit tests with hand-made fixtures: one company per edge case (all 9 met, missing gross profit, negative equity, restated year).
-- [ ] `dq.py` + `gold.dq_results`: balance-sheet identity check, % of companies with all 9 signals, unmapped LEIs, % of ESEF LEIs with at least one `DC` common-stock listing (with the misses listed).
+- [x] `signals.py`: the 9 signals, each returning 1 / 0 / null. Null means missing input, never 0 → **ADR-005**. Result: ratios use end-of-year assets, so change signals need only t and t−1; gross profit falls back to `revenue − abs(cost_of_sales)` (33 LEI-years).
+- [x] `gold.piotroski_score`: signals, `f_score = sum of non-null`, `signals_available`, one row per LEI × fiscal year. Listings (ISIN, ticker) join one-to-many from `silver.isin_listing` filtered to `Common Stock`; never force 1:1 (dual-class shares, ADR-008). Result: 815 rows (same as silver); 245 fully scored, 297 first years at 4 signals. Listings are an array per LEI, from the latest OpenFIGI snapshot.
+- [x] Unit tests with hand-made fixtures: one company per edge case (all 9 met, missing gross profit, negative equity, restated year). Result: `test_signals.py`, `test_listings.py`, `test_dq.py`. Negative equity is tested in the identity check, because no signal uses equity. The restated year is covered by `latest_filing`, plus a gap-year test.
+- [x] `dq.py` + `gold.dq_results`: balance-sheet identity check, % of companies with all 9 signals, unmapped LEIs, % of ESEF LEIs with at least one `DC` common-stock listing (with the misses listed). Result: identity 9 of 731 checked fail (1.2%), duplicate conflicts in 7 rows, 13 of 315 LEIs unmapped, 89 of 315 LEIs with a listing (ADR-008). A materialized view of the latest run; history and event-log drop counts move to Day 6.
 
-### Day 6 (Mon Oct 19): CI/CD and orchestration
+### Day 6 (Sun Oct 18): CI/CD and orchestration
 
 - [ ] `ci.yml` on PR: ruff, pytest, `databricks bundle validate -t dev`.
 - [ ] Move the `bronze`/`silver`/`gold` schemas and the landing volume into the bundle: `databricks bundle deployment bind` the existing objects, and check dev-mode naming first (ADR-003, moved from Day 3).
 - [ ] `deploy.yml` on merge to `main`: `bundle deploy -t prod`, then `bundle run` of the job. Auth via a GitHub environment secret → **ADR-006** (service principal OAuth if Free Edition allows it, otherwise a short-lived PAT; write down which and why).
-- [ ] `extract.yml`: manual `workflow_dispatch` plus a monthly cron that runs the extractor and uploads to the prod volume.
-- [ ] A job in `resources/job_daily.yml`: pipeline refresh → DQ task → failure email notification.
+- [ ] `extract.yml`: manual `workflow_dispatch` plus a monthly cron that runs the extractor and uploads to the prod volume. Not in the DoD: cut first if the day runs over.
+- [ ] A job in `resources/job_daily.yml`: pipeline refresh → DQ task → failure email notification. The DQ task appends `gold.dq_results` to a history table (one row per run per rule) and adds the expectation drop counts from the event log (moved from Day 5, ADR-009).
 
-### Day 7 (Tue Oct 20): make it presentable
+### Day 7 (Mon Oct 19): make it presentable
 
 - [ ] README: problem, the diagram, a results sample, how to run, limitations, an ADR index.
 - [ ] AI/BI dashboard: score distribution, top 20, DQ failures over runs.
