@@ -17,6 +17,7 @@ END = date(2024, 12, 31)
 
 # (source_file, report_period_end, scope, period_start, period_end)
 FACTS = [
+    ("annual.json", END, "consolidated", None, date(2022, 12, 31)),  # opening equity
     ("annual.json", END, "consolidated", date(2024, 1, 1), END),
     ("annual.json", END, "separate", date(2024, 1, 1), END),
     ("annual.json", END, "consolidated", None, END),
@@ -24,6 +25,9 @@ FACTS = [
     # a half-year report carrying last year's full-year figures as comparatives
     ("half.json", date(2024, 6, 30), "consolidated", date(2023, 1, 1), date(2023, 12, 31)),
     ("separate.json", END, "separate", date(2024, 1, 1), END),
+    # a quarterly report with trailing twelve months, plus last full year as comparative
+    ("ltm.json", date(2025, 3, 31), "consolidated", date(2024, 4, 1), date(2025, 3, 31)),
+    ("ltm.json", date(2025, 3, 31), "consolidated", date(2024, 1, 1), END),
 ]
 SCHEMA = (
     "source_file STRING, report_period_end DATE, scope STRING, period_start DATE, period_end DATE"
@@ -40,6 +44,12 @@ def test_annual_filings_drops_interim_reports(facts):
         "annual.json",
         "separate.json",
     }
+
+
+def test_annual_periods_keeps_instants_only_at_fiscal_year_ends(facts):
+    ends = {r.period_end for r in annual_periods(facts).collect()}
+    assert END in ends
+    assert date(2022, 12, 31) not in ends
 
 
 def test_pick_scope_prefers_consolidated(facts):

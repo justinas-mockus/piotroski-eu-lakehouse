@@ -15,15 +15,23 @@ def _is_annual(start: Column, end: Column) -> Column:
 
 
 def annual_filings(facts: DataFrame) -> DataFrame:
-    """Keep annual reports: a 330-400 day duration ends on the report end date (rule 4)."""
+    """Keep annual reports (rule 4): an annual duration ends on the report end date, and no
+    annual duration is off its yearly cycle (trailing twelve months in a quarterly report)."""
     filing = Window.partitionBy("source_file")
-    ends_report = _is_annual(F.col("period_start"), F.col("period_end")) & (
-        F.col("period_end") == F.col("report_period_end")
-    )
+    is_annual = _is_annual(F.col("period_start"), F.col("period_end"))
+    ends_report = is_annual & (F.col("period_end") == F.col("report_period_end"))
+    years_back = F.round(F.months_between("report_period_end", "period_end") / 12)
+    cycle_end = F.add_months(F.col("report_period_end"), (-12 * years_back).cast("int"))
+    off_cycle = is_annual & (F.abs(F.datediff(F.col("period_end"), cycle_end)) > 7)
     return (
-        facts.withColumn("_annual", F.bool_or(ends_report).over(filing))
-        .where("_annual")
-        .drop("_annual")
+        facts.withColumns(
+            {
+                "_annual": F.bool_or(ends_report).over(filing),
+                "_off_cycle": F.bool_or(off_cycle).over(filing),
+            }
+        )
+        .where("_annual AND NOT _off_cycle")
+        .drop("_annual", "_off_cycle")
     )
 
 
@@ -41,9 +49,14 @@ def pick_scope(facts: DataFrame) -> DataFrame:
 
 
 def annual_periods(facts: DataFrame) -> DataFrame:
-    """Keep instants and annual (330-400 day) durations."""
-    return facts.where(
-        F.col("period_start").isNull() | _is_annual(F.col("period_start"), F.col("period_end"))
+    """Keep annual durations, and instants on a date where an annual duration ends."""
+    year_end = Window.partitionBy("source_file", "period_end")
+    is_annual = _is_annual(F.col("period_start"), F.col("period_end"))
+    return (
+        facts.where(F.col("period_start").isNull() | is_annual)
+        .withColumn("_year_end", F.bool_or(is_annual).over(year_end))
+        .where("_year_end")
+        .drop("_year_end")
     )
 
 
@@ -85,5 +98,5 @@ def latest_filing(wide: DataFrame) -> DataFrame:
 def fundamentals(facts: DataFrame) -> DataFrame:
     """silver.fact -> one row per LEI and fiscal year end, one column per canonical field."""
     filings = pick_scope(annual_filings(facts))
-    resolved = resolve_duplicates(annual_periods(map_concepts(filings)))
+    resolved = resolve_duplicates(map_concepts(annual_periods(filings)))
     return latest_filing(to_wide(resolved)).withColumn("fiscal_year", F.year("fiscal_year_end"))
