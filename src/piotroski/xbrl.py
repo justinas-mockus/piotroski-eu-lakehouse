@@ -1,6 +1,8 @@
 from pyspark.sql import Column, DataFrame
 from pyspark.sql import functions as F
 
+FILE_NAME_PATTERN = r"_(\d{4}-\d{2}-\d{2})_(\d+)\.json$"
+
 FACTS_SCHEMA = """STRUCT<
   documentInfo: STRUCT<namespaces: MAP<STRING, STRING>>,
   facts: MAP<STRING, STRUCT<value: STRING, decimals: STRING, dimensions: MAP<STRING, STRING>>>>"""
@@ -58,4 +60,15 @@ def parse_facts(bronze: DataFrame) -> DataFrame:
             .alias("scope"),
         )
         .where(F.col("unit").isNotNull() & F.col("value").isNotNull() & F.col("scope").isNotNull())
+    )
+
+
+def filing_keys(df: DataFrame) -> DataFrame:
+    """Add report_period_end and filing_id from `{lei}_{period_end}_{filing_id}.json` (ADR-009)."""
+    path = F.col("source_file")
+    return df.withColumns(
+        {
+            "report_period_end": F.try_to_date(F.regexp_extract(path, FILE_NAME_PATTERN, 1)),
+            "filing_id": F.regexp_extract(path, FILE_NAME_PATTERN, 2).try_cast("bigint"),
+        }
     )

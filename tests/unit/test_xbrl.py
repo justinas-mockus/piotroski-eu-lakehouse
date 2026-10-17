@@ -4,7 +4,7 @@ from datetime import date
 import pytest
 from pyspark.sql import functions as F
 
-from piotroski.xbrl import parse_facts
+from piotroski.xbrl import filing_keys, parse_facts
 
 NS = {"ifrs_full": "https://xbrl.ifrs.org/taxonomy/2022-03-24/ifrs-full"}
 LEI = "LEI0000000000000TEST"
@@ -65,3 +65,14 @@ def test_periods_use_next_day_midnight(parsed):
 def test_scope_from_axis(parsed):
     assert parsed["assets"].scope == "consolidated"
     assert parsed["profit_separate"].scope == "separate"
+
+
+def test_filing_keys_from_file_name(spark):
+    paths = [
+        "/Volumes/c/bronze/landing/esef/ingest_date=2026-10-16/LEI_2024-12-31_17294.json",
+        "/Volumes/c/bronze/landing/esef/ingest_date=2026-10-16/unexpected.json",
+    ]
+    df = spark.createDataFrame([(p,) for p in paths], "source_file string")
+    good, bad = filing_keys(df).collect()
+    assert (good.report_period_end, good.filing_id) == (date(2024, 12, 31), 17294)
+    assert (bad.report_period_end, bad.filing_id) == (None, None)
