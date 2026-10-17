@@ -159,3 +159,13 @@ a_facts.groupBy(dims["period"].contains("/").alias("is_duration")).count().show(
 csfs = lambda k, v: k.endswith(":ConsolidatedAndSeparateFinancialStatementsAxis")
 (a_facts.select(F.map_values(F.map_filter(dims, csfs))[0].alias("member"))
     .groupBy("member").count().show(truncate=False))
+
+
+# COMMAND ----------
+fact = spark.table("piotroski_dev.silver.fact")
+fact.agg(F.count("*").alias("rows"), F.countDistinct("source_file").alias("files"),
+         F.sum(F.col("filing_id").isNull().cast("int")).alias("null_filing_id")).show()
+fact.groupBy("scope").count().show()
+(fact.where((F.col("lei") == "549300DAQ1CVT6CXN342") & (F.col("concept") == "ifrs-full:Assets"))
+     .select("report_period_end", "period_end", "value", "decimals", "scope")
+     .orderBy("report_period_end", "period_end").show())
