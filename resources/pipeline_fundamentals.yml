@@ -12,6 +12,8 @@ resources:
             path: ../pipelines/bronze.py
         - file:
             path: ../pipelines/silver.py
+        - file:
+            path: ../pipelines/gold.py
       environment:
         dependencies:
           - ../dist/*.whl
