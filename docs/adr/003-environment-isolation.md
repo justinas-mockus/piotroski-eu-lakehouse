@@ -51,3 +51,4 @@ Schemas and volumes inside that catalog can be created with the CLI (`databricks
 
 - Schemas and the landing volume stay outside the bundle until Day 6. They already exist (created with the CLI), and moving them means binding the existing objects (`databricks bundle deployment bind`) plus checking dev-mode naming. Nothing on Day 3 needs it.
 - The upload script takes the catalog as an argument (default `piotroski_dev`).
+- Day 4 (2026-10-17): one pipeline (`piotroski_fundamentals`) publishes to all three schemas. Its default schema is `bronze`; silver and gold tables use qualified names (`silver.fact`, `silver.fundamentals`). One pipeline keeps the lineage graph and the expectation counts in one event log, and avoids cross-pipeline scheduling on a workspace capped at a few concurrent serverless computes. The cost is that a full refresh must name its tables (`--full-refresh silver.fundamentals`), or it resets bronze too.

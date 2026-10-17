@@ -11,6 +11,14 @@ variables:
 targets:
   dev:
     mode: development
+    presets:
+      pipelines_development: false  # dev mode's warm compute keeps a stale wheel (ADR-003)
     default: true
     variables:
       catalog: piotroski_dev
+
+artifacts:
+  piotroski_wheel:
+    type: whl
+    build: rm -rf dist && uv build --wheel
+    path: .

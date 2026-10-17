@@ -150,21 +150,21 @@ Each day ends with a merged PR to `main`. If a day overruns by more than 2 hours
 
 ### Day 4 (Sat Oct 17): silver, the hard day (time-box: 6 h)
 
-- [ ] Make `src/piotroski/` importable from the pipeline source files. Bundle-deployed pipeline code does not see `src/` on its path by default (flagged on Day 3). Do this first: `concepts.py` is the first module the pipeline imports. Then move `with_lineage` from `pipelines/bronze.py` into `src/piotroski/` with a fixture test for the `ingest_date` regex.
-- [ ] Decide how silver and gold publish next to bronze: one pipeline with fully qualified table names (`silver.fact`) or one pipeline per layer. The pipeline's default schema is `bronze`. Record the decision in ADR-003 Consequences.
+- [x] Make `src/piotroski/` importable from the pipeline source files. Bundle-deployed pipeline code does not see `src/` on its path by default (flagged on Day 3). Do this first: `concepts.py` is the first module the pipeline imports. Then move `with_lineage` from `pipelines/bronze.py` into `src/piotroski/` with a fixture test for the `ingest_date` regex.
+- [x] Decide how silver and gold publish next to bronze: one pipeline with fully qualified table names (`silver.fact`) or one pipeline per layer. The pipeline's default schema is `bronze`. Record the decision in ADR-003 Consequences. Result: `src/` ships as a versioned wheel; dev-mode pipelines reused a stale environment, so the dev target sets `presets.pipelines_development: false` (ADR-010). One pipeline with qualified names (ADR-003).
 
-- [ ] `silver.fact`: parse with `from_json` to `MAP<STRING, STRUCT<value, decimals, dimensions MAP>>`, explode, and keep **non-dimensional** facts only (no segment or axis members). That gives consolidated totals.
-- [ ] Parse periods: instant vs. duration. Map each to fiscal year end.
-- [ ] `concepts.py`: a mapping table from canonical field to an ordered list of `ifrs-full:` concepts (first hit wins). Start with: `ProfitLoss`, `Assets`, `CashFlowsFromUsedInOperatingActivities`, `CurrentAssets`, `CurrentLiabilities`, `NoncurrentLiabilities` (proxy for long-term debt; record it in ADR), `Revenue`, `GrossProfit` / `CostOfSales`, `ProceedsFromIssuingShares`.
-- [ ] `silver.fundamentals`: one row per LEI × fiscal year, a column per canonical field, currency column, source filing id. Dedupe restatements: the newest filing wins for a given year.
-- [ ] Expectations: `Assets > 0`, the currency is ISO, fiscal year within range → drop or quarantine (decide and write it down).
+- [x] `silver.fact`: parse with `from_json` to `MAP<STRING, STRUCT<value, decimals, dimensions MAP>>`, explode, and keep **non-dimensional** facts only (no segment or axis members). That gives consolidated totals.
+- [x] Parse periods: instant vs. duration. Map each to fiscal year end.
+- [x] `concepts.py`: a mapping table from canonical field to an ordered list of `ifrs-full:` concepts (first hit wins). Start with: `ProfitLoss`, `Assets`, `CashFlowsFromUsedInOperatingActivities`, `CurrentAssets`, `CurrentLiabilities`, `NoncurrentLiabilities` (proxy for long-term debt; record it in ADR), `Revenue`, `GrossProfit` / `CostOfSales`, `ProceedsFromIssuingShares`.
+- [x] `silver.fundamentals`: one row per LEI × fiscal year, a column per canonical field, currency column, source filing id. Dedupe restatements: the newest filing wins for a given year. Result: 525 annual filings (7 trailing-twelve-month interims excluded), 815 rows for 302 LEIs (ADR-009).
+- [x] Expectations: `Assets > 0`, the currency is ISO, fiscal year within range → drop or quarantine (decide and write it down). Result: `expect_all_or_drop`; counts in the event log for Day 5 DQ.
 
 ### Day 5 (Sun Oct 18): gold and tests
 
-- [ ] `signals.py`: the 9 signals, each returning 1 / 0 / null. Null means missing input, never 0 → **ADR-005**.
-- [ ] `gold.piotroski_score`: signals, `f_score = sum of non-null`, `signals_available`, one row per LEI × fiscal year. Listings (ISIN, ticker) join one-to-many from `silver.isin_listing` filtered to `Common Stock`; never force 1:1 (dual-class shares, ADR-008).
-- [ ] Unit tests with hand-made fixtures: one company per edge case (all 9 met, missing gross profit, negative equity, restated year).
-- [ ] `dq.py` + `gold.dq_results`: balance-sheet identity check, % of companies with all 9 signals, unmapped LEIs, % of ESEF LEIs with at least one `DC` common-stock listing (with the misses listed).
+- [x] `signals.py`: the 9 signals, each returning 1 / 0 / null. Null means missing input, never 0 → **ADR-005**.
+- [x] `gold.piotroski_score`: signals, `f_score = sum of non-null`, `signals_available`, one row per LEI × fiscal year. Listings (ISIN, ticker) join one-to-many from `silver.isin_listing` filtered to `Common Stock`; never force 1:1 (dual-class shares, ADR-008).
+- [x] Unit tests with hand-made fixtures: one company per edge case (all 9 met, missing gross profit, negative equity, restated year).
+- [x] `dq.py` + `gold.dq_results`: balance-sheet identity check, % of companies with all 9 signals, unmapped LEIs, % of ESEF LEIs with at least one `DC` common-stock listing (with the misses listed).
 
 ### Day 6 (Mon Oct 19): CI/CD and orchestration
 
@@ -223,7 +223,9 @@ Write ADRs as short Markdown files in `docs/adr/NNN-title.md` with four headings
 | 006 | CI auth method for Free Edition | 6 |
 | 007 | Long-term debt proxy and equity-issuance definition | 4 |
 | 008 | Ticker source: OpenFIGI mapping, listing grain per ISIN | 3 |
-| 009+ | One per Free Edition limit you actually hit, with the error message | as hit |
+| 009 | Silver fact selection rules (prefixes, scope, annual filings, duplicates, restatements) | 4 |
+| 010 | `src/` shipped as a versioned wheel; dev-mode pipelines off | 4 |
+| 011+ | One per Free Edition limit you actually hit, with the error message | as hit |
 
 ### Commit and PR hygiene
 
