@@ -79,9 +79,14 @@ EXPECTATIONS = (
 
 def expectation_drops(event_log: DataFrame) -> DataFrame:
     """Rows dropped by silver expectations in the latest pipeline update, one row per rule."""
-    progress = event_log.where("event_type = 'flow_progress'").select(
+    flow = event_log.where("event_type = 'flow_progress'")
+    latest_update = (
+        flow.orderBy(F.desc("timestamp"))
+        .select(F.col("origin.update_id").alias("update_id"))
+        .limit(1)
+    )  # before the explode: an update with no expectations must still count as latest
+    progress = flow.select(
         F.col("origin.update_id").alias("update_id"),
-        "timestamp",
         F.explode(
             F.from_json(
                 F.get_json_object("details", "$.flow_progress.data_quality.expectations"),
@@ -89,8 +94,7 @@ def expectation_drops(event_log: DataFrame) -> DataFrame:
             )
         ).alias("e"),
     )
-    latest_update = progress.orderBy(F.desc("timestamp")).select("update_id").limit(1)
-    table = F.substring_index("e.dataset", ".", -2)  # drop the catalog: same rule name per target
+    table = F.substring_index("e.dataset", ".", -2)
     return (
         progress.join(latest_update, "update_id")
         .groupBy(F.concat_ws(":", F.lit("expectation"), table, "e.name").alias("rule"))

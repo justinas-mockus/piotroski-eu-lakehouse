@@ -111,6 +111,18 @@ def test_expectation_drops_uses_latest_update_only(spark):
     assert (r.checked, r.failed, r.pct_failed, r.details) == (100, 2, 2.0, [])
 
 
+def test_expectation_drops_empty_when_latest_update_has_none(spark):
+    no_dq = json.dumps({"flow_progress": {"status": "COMPLETED"}})
+    log = spark.createDataFrame(
+        [
+            _progress("old", 1, [_exp("assets_positive", 90, 10)]),
+            ("flow_progress", datetime(2026, 10, 18, 2), ("new",), no_dq),
+        ],
+        LOG_SCHEMA,
+    )
+    assert expectation_drops(log).count() == 0
+
+
 def test_dq_history_unions_and_tags_run(spark, frames):
     log = spark.createDataFrame([_progress("u", 1, [_exp("assets_positive", 9, 1)])], LOG_SCHEMA)
     rows = dq_history(dq_results(*frames), log, "123").collect()
