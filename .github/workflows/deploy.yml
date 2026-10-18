@@ -33,5 +33,6 @@ jobs:
       - run: databricks bundle deploy -t prod
 
       - name: Run the daily job
+        if: vars.RUN_AFTER_DEPLOY == 'true'   # unset until the prod volume has data (ADR-003)
         shell: bash                    # adds -o pipefail: a failed run still fails the step
         run: databricks bundle run daily -t prod 2>&1 | sed -E 's/\?o=[0-9]+//'
