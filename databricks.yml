@@ -7,6 +7,8 @@ include:
 variables:
   catalog:
     description: Unity Catalog catalog for this target (ADR-003)
+  alert_email:
+    description: Job failure email; set BUNDLE_VAR_alert_email, never committed
 
 targets:
   dev:
