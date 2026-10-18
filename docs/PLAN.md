@@ -168,11 +168,11 @@ Each day ends with a merged PR to `main`. If a day overruns by more than 2 hours
 
 ### Day 6 (Sun Oct 18): CI/CD and orchestration
 
-- [ ] `ci.yml` on PR: ruff, pytest, `databricks bundle validate -t dev`.
-- [ ] Move the `bronze`/`silver`/`gold` schemas and the landing volume into the bundle: `databricks bundle deployment bind` the existing objects, and check dev-mode naming first (ADR-003, moved from Day 3).
-- [ ] `deploy.yml` on merge to `main`: `bundle deploy -t prod`, then `bundle run` of the job. Auth via a GitHub environment secret → **ADR-006** (service principal OAuth if Free Edition allows it, otherwise a short-lived PAT; write down which and why).
-- [ ] `extract.yml`: manual `workflow_dispatch` plus a monthly cron that runs the extractor and uploads to the prod volume. Not in the DoD: cut first if the day runs over.
-- [ ] A job in `resources/job_daily.yml`: pipeline refresh → DQ task → failure email notification. The DQ task appends `gold.dq_results` to a history table (one row per run per rule) and adds the expectation drop counts from the event log (moved from Day 5, ADR-009).
+- [x] `ci.yml` on PR: ruff, pytest, `databricks bundle validate -t dev`. Result: pre-commit (ruff), gitleaks-action, pytest, then `bundle validate` for dev and prod as the CI service principal; `test` is a required check on `main`.
+- [x] Move the `bronze`/`silver`/`gold` schemas and the landing volume into the bundle: `databricks bundle deployment bind` the existing objects, and check dev-mode naming first (ADR-003, moved from Day 3). Result: dev mode prefixes schema names (`dev_<user>_bronze`), so they are bundle resources in prod only, with `prevent_destroy`; dev keeps the CLI-created ones, nothing bound.
+- [ ] `deploy.yml` on merge to `main`: `bundle deploy -t prod`, then `bundle run` of the job. Auth via a GitHub environment secret → **ADR-006** (service principal OAuth if Free Edition allows it, otherwise a short-lived PAT; write down which and why). Result: service principal OAuth M2M works on Free Edition (ADR-006); prod catalog bootstrapped with SQL. Ticked once the first merge deploy is green.
+- [ ] ~~`extract.yml`~~ (cut): manual `workflow_dispatch` plus a monthly cron that runs the extractor and uploads to the prod volume. Not in the DoD: cut first if the day runs over. Cut on 2026-10-18. When it returns, it must fetch `manifest.jsonl` from the volume first, or a fresh runner re-downloads everything.
+- [x] A job in `resources/job_daily.yml`: pipeline refresh → DQ task → failure email notification. The DQ task appends `gold.dq_results` to a history table (one row per run per rule) and adds the expectation drop counts from the event log (moved from Day 5, ADR-009). Result: `piotroski_daily` (refresh → `dq_history`), event log published as `bronze.pipeline_event_log`, `gold.dq_results_history` tagged with `run_id`; first dev run green, 8 rules (3 expectations, 0 drops).
 
 ### Day 7 (Mon Oct 19): make it presentable
 

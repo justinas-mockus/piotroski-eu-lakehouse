@@ -1,6 +1,6 @@
 [project]
 name = "piotroski-eu-lakehouse"
-version = "0.1.4"
+version = "0.1.5"
 description = "Piotroski F-scores from EU ESEF filings on Databricks"
 readme = "README.md"
 license = "MIT"

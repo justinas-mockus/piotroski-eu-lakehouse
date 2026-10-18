@@ -1,0 +1,34 @@
+# Prod only: dev mode prefixes schema names (dev_<user>_bronze), which breaks the
+# pipeline's qualified names; dev keeps its CLI-created schemas (ADR-003).
+targets:
+  prod:
+    resources:
+      schemas:
+        bronze:
+          catalog_name: ${var.catalog}
+          name: bronze
+          lifecycle:
+            prevent_destroy: true
+        silver:
+          catalog_name: ${var.catalog}
+          name: silver
+          lifecycle:
+            prevent_destroy: true
+        gold:
+          catalog_name: ${var.catalog}
+          name: gold
+          lifecycle:
+            prevent_destroy: true
+
+      volumes:
+        landing:
+          catalog_name: ${var.catalog}
+          schema_name: ${resources.schemas.bronze.name}
+          name: landing
+          volume_type: MANAGED
+          lifecycle:
+            prevent_destroy: true
+
+      pipelines:
+        fundamentals:
+          schema: ${resources.schemas.bronze.name}

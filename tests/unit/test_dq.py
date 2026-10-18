@@ -1,6 +1,16 @@
+import json
+from datetime import datetime
+
 import pytest
 
-from piotroski.dq import balance_identity, dq_results, listing_coverage, unmapped_leis
+from piotroski.dq import (
+    balance_identity,
+    dq_history,
+    dq_results,
+    expectation_drops,
+    listing_coverage,
+    unmapped_leis,
+)
 
 FUNDAMENTALS_SCHEMA = (
     "lei STRING, fiscal_year INT, assets DOUBLE, equity DOUBLE, liabilities DOUBLE, n_conflicts INT"
@@ -58,3 +68,63 @@ def test_dq_results_has_one_row_per_rule(frames):
     }
     assert rows["duplicate_conflicts"].details == ["BROKEN:2024"]
     assert rows["all_signals_available"].failed == 1
+
+
+LOG_SCHEMA = (
+    "event_type STRING, timestamp TIMESTAMP, origin STRUCT<update_id: STRING>, details STRING"
+)
+
+
+def _progress(update, hour, expectations):
+    details = {
+        "flow_progress": {"status": "COMPLETED", "data_quality": {"expectations": expectations}}
+    }
+    return ("flow_progress", datetime(2026, 10, 18, hour), (update,), json.dumps(details))
+
+
+def _exp(name, passed, failed):
+    return {
+        "name": name,
+        "dataset": "piotroski_dev.silver.fundamentals",
+        "passed_records": passed,
+        "failed_records": failed,
+    }
+
+
+def test_expectation_drops_uses_latest_update_only(spark):
+    no_dq = json.dumps({"flow_progress": {"status": "COMPLETED"}})
+    log = spark.createDataFrame(
+        [
+            _progress("old", 1, [_exp("assets_positive", 90, 10)]),
+            _progress("new", 2, [_exp("assets_positive", 98, 2), _exp("currency_is_iso", 100, 0)]),
+            ("flow_progress", datetime(2026, 10, 18, 3), ("new",), no_dq),
+            ("user_code_context", datetime(2026, 10, 18, 4), ("new",), "{}"),
+        ],
+        LOG_SCHEMA,
+    )
+    rows = {r.rule: r for r in expectation_drops(log).collect()}
+    assert set(rows) == {
+        "expectation:silver.fundamentals:assets_positive",
+        "expectation:silver.fundamentals:currency_is_iso",
+    }
+    r = rows["expectation:silver.fundamentals:assets_positive"]
+    assert (r.checked, r.failed, r.pct_failed, r.details) == (100, 2, 2.0, [])
+
+
+def test_expectation_drops_empty_when_latest_update_has_none(spark):
+    no_dq = json.dumps({"flow_progress": {"status": "COMPLETED"}})
+    log = spark.createDataFrame(
+        [
+            _progress("old", 1, [_exp("assets_positive", 90, 10)]),
+            ("flow_progress", datetime(2026, 10, 18, 2), ("new",), no_dq),
+        ],
+        LOG_SCHEMA,
+    )
+    assert expectation_drops(log).count() == 0
+
+
+def test_dq_history_unions_and_tags_run(spark, frames):
+    log = spark.createDataFrame([_progress("u", 1, [_exp("assets_positive", 9, 1)])], LOG_SCHEMA)
+    rows = dq_history(dq_results(*frames), log, "123").collect()
+    assert len(rows) == 6  # 5 rules + 1 expectation
+    assert {r.run_id for r in rows} == {"123"}

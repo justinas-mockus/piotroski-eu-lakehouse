@@ -70,3 +70,44 @@ def dq_results(
         listing_coverage(facts, listings),
     ]
     return reduce(DataFrame.unionByName, rules).withColumn("computed_at", F.current_timestamp())
+
+
+EXPECTATIONS = (
+    "ARRAY<STRUCT<name STRING, dataset STRING, passed_records BIGINT, failed_records BIGINT>>"
+)
+
+
+def expectation_drops(event_log: DataFrame) -> DataFrame:
+    """Rows dropped by silver expectations in the latest pipeline update, one row per rule."""
+    flow = event_log.where("event_type = 'flow_progress'")
+    latest_update = (
+        flow.orderBy(F.desc("timestamp"))
+        .select(F.col("origin.update_id").alias("update_id"))
+        .limit(1)
+    )  # before the explode: an update with no expectations must still count as latest
+    progress = flow.select(
+        F.col("origin.update_id").alias("update_id"),
+        F.explode(
+            F.from_json(
+                F.get_json_object("details", "$.flow_progress.data_quality.expectations"),
+                EXPECTATIONS,
+            )
+        ).alias("e"),
+    )
+    table = F.substring_index("e.dataset", ".", -2)
+    return (
+        progress.join(latest_update, "update_id")
+        .groupBy(F.concat_ws(":", F.lit("expectation"), table, "e.name").alias("rule"))
+        .agg(
+            F.sum(F.col("e.passed_records") + F.col("e.failed_records")).alias("checked"),
+            F.sum("e.failed_records").alias("failed"),
+        )
+        .withColumn("details", F.array().cast("array<string>"))
+        .withColumn("pct_failed", F.round(100 * F.col("failed") / F.nullif("checked", F.lit(0)), 2))
+        .withColumn("computed_at", F.current_timestamp())
+    )
+
+
+def dq_history(results: DataFrame, event_log: DataFrame, run_id: str) -> DataFrame:
+    """gold.dq_results plus expectation drops, tagged with the job run that recorded them."""
+    return results.unionByName(expectation_drops(event_log)).withColumn("run_id", F.lit(run_id))

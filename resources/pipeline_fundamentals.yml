@@ -5,6 +5,11 @@ resources:
       catalog: ${var.catalog}
       schema: bronze
       serverless: true
+      event_log:
+        catalog: ${var.catalog}
+        schema: bronze
+        name: pipeline_event_log
+
       configuration:
         landing_root: /Volumes/${var.catalog}/bronze/landing
       libraries:

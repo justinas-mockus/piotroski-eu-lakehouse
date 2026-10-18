@@ -7,6 +7,8 @@ include:
 variables:
   catalog:
     description: Unity Catalog catalog for this target (ADR-003)
+  alert_email:
+    description: Job failure email; set BUNDLE_VAR_alert_email, never committed
 
 targets:
   dev:
@@ -16,6 +18,13 @@ targets:
     default: true
     variables:
       catalog: piotroski_dev
+  prod:
+    mode: production
+    workspace:
+      root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}
+
+    variables:
+      catalog: piotroski_prod
 
 artifacts:
   piotroski_wheel:
