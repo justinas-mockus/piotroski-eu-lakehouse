@@ -1,0 +1,37 @@
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: prod
+    env:
+      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+      DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}
+      DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
+      BUNDLE_VAR_alert_email: ${{ secrets.ALERT_EMAIL }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: astral-sh/setup-uv@v6     # the bundle artifact runs `uv build --wheel`
+        with:
+          python-version: "3.12"
+
+      - uses: databricks/setup-cli@v1.21.0
+
+      - run: databricks bundle deploy -t prod
+
+      - name: Run the daily job
+        shell: bash                    # adds -o pipefail: a failed run still fails the step
+        run: databricks bundle run daily -t prod 2>&1 | sed -E 's/\?o=[0-9]+//'
