@@ -16,6 +16,12 @@ targets:
     default: true
     variables:
       catalog: piotroski_dev
+  prod:
+    mode: production
+    workspace:
+      root_path: /Workspace/Shared/.bundle/${bundle.name}/${bundle.target}
+    variables:
+      catalog: piotroski_prod
 
 artifacts:
   piotroski_wheel:
