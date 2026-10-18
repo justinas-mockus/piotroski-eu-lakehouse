@@ -21,6 +21,8 @@ jobs:
       DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}
       DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
       BUNDLE_VAR_alert_email: ${{ secrets.ALERT_EMAIL }}
+      MASK_WORKSPACE_ID: ${{ secrets.MASK_WORKSPACE_ID }}   # never used; referencing it makes GitHub mask it in logs
+      MASK_ACCOUNT_ID: ${{ secrets.MASK_ACCOUNT_ID }}
     steps:
       - uses: actions/checkout@v5
 
