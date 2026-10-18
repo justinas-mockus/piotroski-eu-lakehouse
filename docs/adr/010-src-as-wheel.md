@@ -40,6 +40,6 @@ On Day 4, a fix to `src/piotroski/fundamentals.py` passed the unit tests but did
 ## Consequences
 
 - Updates start slower: each one starts compute and installs the environment.
-- The version bump is manual until Day 6 CI. A stale run is still possible if a bump is forgotten, and the event-log check catches it.
+- The version bump stays manual: Day 6 CI builds and deploys the wheel but does not bump it. A stale run is still possible in dev if a bump is forgotten, and the event-log check catches it. Prod runs in production mode (`mode: production`), so each update starts fresh compute anyway. The daily job's `dq_history` task installs the same wheel through its serverless environment.
 - Free Edition allows only a few serverless computes at once. With the pipeline, a notebook and a SQL warehouse running, starting a fresh pipeline compute failed with `CLUSTER_CREATION_RESOURCE_EXHAUSTED`. Stop the warehouse and detach notebooks before a run.
 - `databricks bundle validate` is clean. The deprecated `development` property is not used.
