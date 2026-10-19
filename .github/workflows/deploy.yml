@@ -3,6 +3,7 @@ name: deploy
 on:
   push:
     branches: [main]
+    paths-ignore: ["docs/**", "**.md"]  # docs-only merges don't redeploy or re-run the job
   workflow_dispatch:
 
 concurrency:
