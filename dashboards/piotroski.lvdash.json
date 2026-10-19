@@ -44,11 +44,27 @@
       "displayName": "Piotroski scores",
       "layout": [
         {
+          "widget": {
+            "name": "disclaimer",
+            "multilineTextboxSpec": {
+              "lines": [
+                "#### **Not financial advice.** Scores come from automated parsing of public ESEF filings and may be wrong or incomplete. See the project README for definitions and known limitations.\n"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 2
+          }
+        },
+        {
           "position": {
             "height": 6,
             "width": 6,
             "x": 0,
-            "y": 0
+            "y": 2
           },
           "widget": {
             "name": "9bbe9380",
@@ -99,7 +115,7 @@
             "height": 6,
             "width": 6,
             "x": 6,
-            "y": 0
+            "y": 2
           },
           "widget": {
             "name": "leis-scored",
@@ -144,7 +160,7 @@
             "height": 6,
             "width": 6,
             "x": 0,
-            "y": 6
+            "y": 8
           },
           "widget": {
             "name": "0dd1cac5",
@@ -219,7 +235,7 @@
             "height": 6,
             "width": 6,
             "x": 6,
-            "y": 6
+            "y": 8
           },
           "widget": {
             "name": "2d090bb7",

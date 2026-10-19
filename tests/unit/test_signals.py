@@ -39,6 +39,9 @@ ROWS = [
     ("GAP", Y24, 100.0, 10.0, 15.0, 30.0, 60.0, 40.0, 120.0, 40.0, None, None),
     # no cash-flow statement and no proceeds: equity issuance unknown
     ("NOCF", Y24, 100.0, 5.0, None, 40.0, 50.0, 40.0, 100.0, 30.0, None, None),
+    # assets of 0: every ratio on assets is null, not a division error
+    ("ZERO", Y23, 100.0, 5.0, 8.0, 40.0, 50.0, 40.0, 100.0, 30.0, None, None),
+    ("ZERO", Y24, 0.0, 10.0, 15.0, 30.0, 60.0, 40.0, 120.0, 40.0, None, None),
 ]
 
 
@@ -78,6 +81,14 @@ def test_gap_year_is_not_a_prior_year(scores):
     row = scores[("GAP", Y24)]
     assert row.roa_prev is None
     assert row.signals_available == 4
+
+
+def test_zero_assets_is_null_not_zero(scores):
+    row = scores[("ZERO", Y24)]
+    assert (row.roa, row.lever, row.turn) == (None, None, None)
+    nulls = {s for s in SIGNALS if row[s] is None}
+    assert nulls == {"f_roa", "f_delta_roa", "f_delta_lever", "f_delta_turn"}
+    assert row.signals_available == 5
 
 
 @pytest.mark.parametrize(

@@ -84,6 +84,10 @@ Ties are sorted by name. A company with several share classes is shown under its
 
 Each run appends these rows, plus the silver expectation drop counts from the pipeline event log, to `gold.dq_results_history`. The dashboard plots that history.
 
+**Dashboard** (AI/BI, deployed by the bundle, ADR-011): score distribution, LEIs scored, the top 20 and DQ failures per run.
+
+![AI/BI dashboard: F-score distribution, LEIs scored, top 20 and DQ failures per run](docs/img/dashboard.png)
+
 ## Signals
 
 Each signal is 1, 0 or **null**. Null means an input was missing; it never counts as 0 (ADR-005). `f_score` is the sum of the non-null signals, `signals_available` counts them, and `data_completeness = signals_available / 9`. That way a reader can tell a weak company from a company with missing data.
