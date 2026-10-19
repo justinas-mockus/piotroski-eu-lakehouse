@@ -33,7 +33,7 @@ flowchart LR
     J --> D
 
     subgraph cicd["GitHub Actions (ADR-006)"]
-        PR[PR: ci.yml<br/>ruff, gitleaks, pytest,<br/>bundle validate] --> M[merge to main: deploy.yml<br/>bundle deploy -t prod<br/>bundle run daily]
+        PR[PR: ci.yml<br/>ruff, gitleaks, pytest,<br/>bundle validate] --> M[merge to main: deploy.yml<br/>bundle deploy -t prod<br/>bundle run daily if RUN_AFTER_DEPLOY]
     end
 
     M -. deploys .-> pipeline
@@ -64,7 +64,7 @@ The ten highest-scoring companies with all nine signals available, latest fiscal
 | MT Højgaard Holding | MTHH | 2025 | 8 | 1 | 1 | 1 | 0 | 1 | 1 | 1 | 1 | 1 |
 | Novonesis (B) | NSISB | 2025 | 8 | 1 | 1 | 1 | 1 | 1 | 0 | 1 | 1 | 1 |
 
-Ties are sorted by name. A company with several share classes is shown under its first listing; `gold.piotroski_score` keeps all of them in a `listings` array (ADR-008).
+Ties are sorted by name. A company with several share classes is shown under its first listing by ISIN; `gold.piotroski_score` keeps all of them in a `listings` array (ADR-008).
 
 **Coverage**
 
@@ -96,7 +96,7 @@ Each signal is 1, 0 or **null**. Null means an input was missing; it never count
 | `f_accrual` | CFO > profit | CFO, profit |
 | `f_delta_lever` | non-current liabilities / assets fell | ADR-007 proxy for long-term debt |
 | `f_delta_liquid` | current ratio rose | current assets / current liabilities |
-| `f_eq_offer` | no proceeds from issuing shares | ADR-007 |
+| `f_eq_offer` | no proceeds from issuing shares (a filed cash-flow statement without a proceeds line counts as none) | ADR-007 |
 | `f_delta_margin` | gross margin rose | gross profit, or revenue − cost of sales |
 | `f_delta_turn` | asset turnover rose | revenue / assets |
 
@@ -140,7 +140,7 @@ databricks bundle deploy -t dev
 databricks bundle run daily -t dev    # pipeline refresh -> dq_history
 ```
 
-**Prod** is deployed only by CI. A PR runs `ci.yml`, and a merge to `main` runs `deploy.yml` (`bundle deploy -t prod`, then `bundle run daily`) as a service principal with OAuth M2M (ADR-006). In prod, the bundle owns the schemas and the landing volume. The one-off bootstrap order is in ADR-003.
+**Prod** is deployed only by CI. A PR runs `ci.yml`, and a merge to `main` runs `deploy.yml` (`bundle deploy -t prod`, then `bundle run daily` when the repository variable `RUN_AFTER_DEPLOY` is `true`) as a service principal with OAuth M2M (ADR-006). In prod, the bundle owns the schemas and the landing volume. The one-off bootstrap order is in ADR-003; the service principal also needs *Can use* on the SQL warehouse for the dashboard (ADR-011).
 
 ## Known limitations
 

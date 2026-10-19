@@ -10,7 +10,7 @@ The definition of done requires an AI/BI dashboard (score distribution, top 20, 
 
 1. Author the dashboard once in the UI against `piotroski_dev`. Dataset SQL uses unqualified table names (`piotroski_score`, `dq_results_history`).
 2. Pull it into the repo with `databricks bundle generate dashboard --existing-id <id>`, keep it as `dashboards/piotroski.lvdash.json`, and declare it in `resources/dashboard_piotroski.yml`. Bind the UI copy in dev (`bundle deployment bind`), so there is one dashboard per target.
-3. The resource sets `dataset_catalog: ${var.catalog}` and `dataset_schema: gold`, which override every dataset's catalog and schema at deploy time.
+3. The resource sets `dataset_catalog: ${var.catalog}` and `dataset_schema: gold`, which override every dataset's catalog and schema at deploy time. The `"catalog": "piotroski_dev"` left in the generated JSON is expected: `bundle validate -t prod -o json` shows `dataset_catalog: piotroski_prod`.
 4. `warehouse_id` comes from a lookup variable (`lookup: warehouse: Serverless Starter Warehouse`), so no warehouse ID is committed and each deployer resolves its own.
 5. `embed_credentials: true`: the published dashboard queries as its publisher. In prod that is the service principal, so viewers need no grants on `piotroski_prod.gold`. The data is public filings.
 
