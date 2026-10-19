@@ -14,4 +14,9 @@ rows = dq_history(
     spark.read.table(f"{catalog}.bronze.pipeline_event_log"),
     run_id,
 )
-rows.write.mode("append").saveAsTable(f"{catalog}.gold.dq_results_history")
+# replaceWhere swaps this run's rows atomically, so a repair run of the task doesn't duplicate them
+(
+    rows.write.mode("overwrite")
+    .option("replaceWhere", f"run_id = '{run_id}'")
+    .saveAsTable(f"{catalog}.gold.dq_results_history")
+)
