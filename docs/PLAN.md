@@ -247,8 +247,8 @@ Each milestone is about 2–4 days and starts only after the previous one is mer
    - [x] `jobs/dq_history.py`: a repair run reuses `run_id` and appends the rows again. Result: `overwrite` with `replaceWhere run_id = …` swaps the run's rows atomically, which is simpler than a MERGE. A dev repair run left 8 rows for 8 rules.
    - [x] `resources/dashboard_piotroski.yml`: add a `permissions` block. Right now only workspace admins can open the prod dashboard. Result: `CAN_READ` for the built-in `users` group, so there is no email and no variable.
    - [x] `tests/unit/test_signals.py`: add a zero-denominator case. Result: `current_liabilities = 0` was already covered (`NOGP`); `ZERO` adds `assets = 0`, which nulls the four asset-based signals.
-   - [ ] README: a dashboard screenshot in `docs/img/`, with the address bar cropped (the URL carries the workspace ID).
-   - [x] Dashboard: a "Not financial advice, see the README" text widget. Result: added straight to the JSON as a full-width text widget at the top; deployed to dev.
+   - [x] README: a dashboard screenshot in `docs/img/`, with the address bar cropped (the URL carries the workspace ID).
+   - [x] Dashboard: a "Not financial advice, see the README" text widget. Result: added straight to the JSON as a full-width text widget at the top, as a `####` heading so it reads one size above body text.
    - [x] `deploy.yml`: `paths-ignore` for docs-only changes (`docs/**`, `**.md`), so a README edit doesn't redeploy prod and re-run the job. A push that changes code as well still deploys.
 
 1. **v0.2: prices and market cap.** Stooq daily prices, ECB FX, `gold.market_cap`. Piotroski's original screen ranks only the highest book-to-market quintile, so this makes the score faithful. It's also the first incremental, daily-changing source, which is a chance to use MERGE / SCD on top of the one-off fundamentals.
