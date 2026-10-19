@@ -1,0 +1,293 @@
+{
+  "datasets": [
+    {
+      "catalog": "piotroski_dev",
+      "displayName": "score_distribution",
+      "name": "fec5385a",
+      "queryLines": [
+        "SELECT lei, fiscal_year, f_score, signals_available\n",
+        "FROM piotroski_score\n",
+        "QUALIFY row_number() OVER (PARTITION BY lei ORDER BY fiscal_year DESC) = 1\n"
+      ],
+      "schema": "gold"
+    },
+    {
+      "catalog": "piotroski_dev",
+      "displayName": "top_20",
+      "name": "b234ceb7",
+      "queryLines": [
+        "SELECT listings[0].name   AS company,\n",
+        "       listings[0].ticker AS ticker,\n",
+        "       lei, fiscal_year, f_score, data_completeness\n",
+        "FROM piotroski_score\n",
+        "WHERE signals_available = 9\n",
+        "QUALIFY row_number() OVER (PARTITION BY lei ORDER BY fiscal_year DESC) = 1\n",
+        "ORDER BY f_score DESC, company\n",
+        "LIMIT 20\n"
+      ],
+      "schema": "gold"
+    },
+    {
+      "catalog": "piotroski_dev",
+      "displayName": "dq_over_runs",
+      "name": "00e7c70c",
+      "queryLines": [
+        "SELECT run_id, min(computed_at) AS run_at, rule, failed, checked, pct_failed\n",
+        "FROM dq_results_history\n",
+        "GROUP BY run_id, rule, failed, checked, pct_failed\n"
+      ],
+      "schema": "gold"
+    }
+  ],
+  "pages": [
+    {
+      "displayName": "Piotroski scores",
+      "layout": [
+        {
+          "position": {
+            "height": 6,
+            "width": 6,
+            "x": 0,
+            "y": 0
+          },
+          "widget": {
+            "name": "9bbe9380",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "fec5385a",
+                  "disaggregated": false,
+                  "fields": [
+                    {
+                      "expression": "`f_score`",
+                      "name": "f_score"
+                    },
+                    {
+                      "expression": "COUNT(`lei`)",
+                      "name": "count(lei)"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "data": {
+                "queryName": "main_query"
+              },
+              "encodings": {
+                "x": {
+                  "fieldName": "f_score",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "count(lei)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "version": 3,
+              "widgetType": "bar"
+            }
+          }
+        },
+        {
+          "position": {
+            "height": 6,
+            "width": 6,
+            "x": 6,
+            "y": 0
+          },
+          "widget": {
+            "name": "leis-scored",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "fec5385a",
+                  "disaggregated": false,
+                  "fields": [
+                    {
+                      "expression": "COUNT(`lei`)",
+                      "name": "count(lei)"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "data": {
+                "queryName": "main_query"
+              },
+              "encodings": {
+                "value": {
+                  "fieldName": "count(lei)"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "fields": [],
+                  "value": "LEIs scored"
+                }
+              },
+              "version": 2,
+              "widgetType": "counter"
+            }
+          }
+        },
+        {
+          "position": {
+            "height": 6,
+            "width": 6,
+            "x": 0,
+            "y": 6
+          },
+          "widget": {
+            "name": "0dd1cac5",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "b234ceb7",
+                  "disaggregated": true,
+                  "fields": [
+                    {
+                      "expression": "`company`",
+                      "name": "company"
+                    },
+                    {
+                      "expression": "`ticker`",
+                      "name": "ticker"
+                    },
+                    {
+                      "expression": "`lei`",
+                      "name": "lei"
+                    },
+                    {
+                      "expression": "`fiscal_year`",
+                      "name": "fiscal_year"
+                    },
+                    {
+                      "expression": "`f_score`",
+                      "name": "f_score"
+                    },
+                    {
+                      "expression": "`data_completeness`",
+                      "name": "data_completeness"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "data": {
+                "queryName": "main_query"
+              },
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "company"
+                  },
+                  {
+                    "fieldName": "ticker"
+                  },
+                  {
+                    "fieldName": "lei"
+                  },
+                  {
+                    "fieldName": "fiscal_year"
+                  },
+                  {
+                    "fieldName": "f_score"
+                  },
+                  {
+                    "fieldName": "data_completeness"
+                  }
+                ]
+              },
+              "version": 2,
+              "widgetType": "table"
+            }
+          }
+        },
+        {
+          "position": {
+            "height": 6,
+            "width": 6,
+            "x": 6,
+            "y": 6
+          },
+          "widget": {
+            "name": "2d090bb7",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "00e7c70c",
+                  "disaggregated": false,
+                  "fields": [
+                    {
+                      "expression": "`rule`",
+                      "name": "rule"
+                    },
+                    {
+                      "expression": "`run_at`",
+                      "name": "run_at"
+                    },
+                    {
+                      "expression": "SUM(`failed`)",
+                      "name": "sum(failed)"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "data": {
+                "queryName": "main_query"
+              },
+              "encodings": {
+                "color": {
+                  "fieldName": "rule",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "x": {
+                  "fieldName": "run_at",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(failed)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true
+              },
+              "version": 3,
+              "widgetType": "bar"
+            }
+          }
+        }
+      ],
+      "layoutVersion": "GRID_V1",
+      "name": "8eb0af93",
+      "pageType": "PAGE_TYPE_CANVAS"
+    }
+  ],
+  "uiSettings": {
+    "applyModeEnabled": false,
+    "theme": {
+      "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED"
+    }
+  }
+}

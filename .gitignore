@@ -225,6 +225,7 @@ data/
 *.jsonl
 *.json
 !tests/fixtures/**
+!dashboards/*.lvdash.json
 
 # Databricks local state
 .databricks/

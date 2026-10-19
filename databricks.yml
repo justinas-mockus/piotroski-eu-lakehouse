@@ -9,6 +9,10 @@ variables:
     description: Unity Catalog catalog for this target (ADR-003)
   alert_email:
     description: Job failure email; set BUNDLE_VAR_alert_email, never committed
+  warehouse_id:
+    description: SQL warehouse the dashboard runs on, looked up by name per target
+    lookup:
+      warehouse: Serverless Starter Warehouse
 
 targets:
   dev:
