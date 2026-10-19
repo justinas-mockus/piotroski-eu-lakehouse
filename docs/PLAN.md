@@ -243,6 +243,14 @@ Write ADRs as short Markdown files in `docs/adr/NNN-title.md` with four headings
 
 Each milestone is about 2–4 days and starts only after the previous one is merged and tagged.
 
+0. **v0.1.1: MVP follow-ups** (from the Day 7 review; about half a day, do first).
+   - [x] `jobs/dq_history.py`: a repair run reuses `run_id` and appends the rows again. Result: `overwrite` with `replaceWhere run_id = …` swaps the run's rows atomically, which is simpler than a MERGE. A dev repair run left 8 rows for 8 rules.
+   - [x] `resources/dashboard_piotroski.yml`: add a `permissions` block. Right now only workspace admins can open the prod dashboard. Result: `CAN_READ` for the built-in `users` group, so there is no email and no variable.
+   - [x] `tests/unit/test_signals.py`: add a zero-denominator case. Result: `current_liabilities = 0` was already covered (`NOGP`); `ZERO` adds `assets = 0`, which nulls the four asset-based signals.
+   - [ ] README: a dashboard screenshot in `docs/img/`, with the address bar cropped (the URL carries the workspace ID).
+   - [x] Dashboard: a "Not financial advice, see the README" text widget. Result: added straight to the JSON as a full-width text widget at the top; deployed to dev.
+   - [x] `deploy.yml`: `paths-ignore` for docs-only changes (`docs/**`, `**.md`), so a README edit doesn't redeploy prod and re-run the job. A push that changes code as well still deploys.
+
 1. **v0.2: prices and market cap.** Stooq daily prices, ECB FX, `gold.market_cap`. Piotroski's original screen ranks only the highest book-to-market quintile, so this makes the score faithful. It's also the first incremental, daily-changing source, which is a chance to use MERGE / SCD on top of the one-off fundamentals.
 2. **v0.3: rate-limited ticker API (your idea).** A queue table of tickers, a daily job pulling N tickers within the free quota, watermark and retry state stored in Delta. It shows backfill under quotas, a very common real-world pattern. Use it as a cross-check source against ESEF (source-vs-source reconciliation report).
 3. **v0.4: more scores.** Altman Z, Magic Formula, Beneish M on the same silver. If the silver model was right, each one is about a day. If it's painful, that's a talking point about the model too.
