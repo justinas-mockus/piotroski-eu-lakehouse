@@ -26,4 +26,5 @@ The definition of done requires an AI/BI dashboard (score distribution, top 20, 
 - Edits made in the UI drift from the repo and are overwritten on the next deploy. To keep one, re-run `bundle generate dashboard --resource piotroski --force` and commit the JSON.
 - Binding moved the dashboard into the bundle folder, which forces a re-create: the dev dashboard got a new ID and URL on the first deploy (2026-10-19). Deploys after that update it in place.
 - The prod warehouse lookup runs as the service principal, which needs *Can use* on the warehouse. That grant is a one-off workspace setting, like the catalog bootstrap (ADR-003).
+- v0.1.1: `permissions` grants `CAN_READ` to the `users` group. Without it, the prod dashboard (owned by the service principal) opens only for workspace admins.
 - The generated JSON holds no workspace ID, host or email (checked 2026-10-19). Dashboard URLs carry the workspace ID (`?o=` / `?w=`), so they never go in the README.
