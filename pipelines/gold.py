@@ -19,7 +19,7 @@ def gold_piotroski_score():
 
 @dp.materialized_view(
     name="gold.dq_results",
-    comment="One row per DQ rule for the latest run; run history comes on Day 6 (ADR-009).",
+    comment="One row per DQ rule for the latest run; history in gold.dq_results_history",
 )
 def gold_dq_results():
     return dq_results(

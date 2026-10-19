@@ -8,14 +8,14 @@ The MVP is due by 2026-10-19. It produces a gold table with a Piotroski F-score 
 
 **Definition of done (all must be true by day 7):**
 
-- [ ] One command (`databricks bundle deploy -t prod` run by CI on merge to `main`) deploys everything. Nothing is created by hand in the UI except the workspace itself.
-- [ ] Extraction lands raw xBRL-JSON files plus a manifest in a Unity Catalog volume. It is idempotent: re-running it downloads nothing new.
-- [ ] Bronze, silver and gold tables exist, using Auto Loader and a declarative pipeline, with data quality expectations on silver.
-- [ ] `gold.piotroski_score` has all 9 signals as separate columns, plus `data_completeness`, so the reader can see which signals were missing rather than silently scored 0.
-- [ ] Accounting identity reconciliation (Assets = Equity + Liabilities, within tolerance) runs on silver. Failures are counted in a DQ table, not hidden.
-- [ ] Unit tests for the pure-Python logic (concept mapping, signal maths) run in CI on every PR.
-- [ ] README with an architecture diagram, a "how to run" section, a top-10 output sample, known limitations, and links to at least 5 ADRs.
-- [ ] A dashboard (Databricks AI/BI) showing the score distribution and DQ failure counts.
+- [x] One command (`databricks bundle deploy -t prod` run by CI on merge to `main`) deploys everything. Nothing is created by hand in the UI except the workspace itself.
+- [x] Extraction lands raw xBRL-JSON files plus a manifest in a Unity Catalog volume. It is idempotent: re-running it downloads nothing new.
+- [x] Bronze, silver and gold tables exist, using Auto Loader and a declarative pipeline, with data quality expectations on silver.
+- [x] `gold.piotroski_score` has all 9 signals as separate columns, plus `data_completeness`, so the reader can see which signals were missing rather than silently scored 0.
+- [x] Accounting identity reconciliation (Assets = Equity + Liabilities, within tolerance) runs on silver. Failures are counted in a DQ table, not hidden.
+- [x] Unit tests for the pure-Python logic (concept mapping, signal maths) run in CI on every PR.
+- [x] README with an architecture diagram, a "how to run" section, a top-10 output sample, known limitations, and links to at least 5 ADRs.
+- [x] A dashboard (Databricks AI/BI) showing the score distribution and DQ failure counts.
 
 **Out of scope for the MVP:** Magic Formula, Altman Z, Beneish M, prices, multi-country, dbt, Terraform, AWS, the rate-limited ticker API. Each one is a post-MVP milestone (last section). Bring anything new in only when the definition of done above is green.
 
@@ -176,9 +176,9 @@ Each day ends with a merged PR to `main`. If a day overruns by more than 2 hours
 
 ### Day 7 (Mon Oct 19): make it presentable
 
-- [ ] README: problem, the diagram, a results sample, how to run, limitations, an ADR index.
-- [ ] AI/BI dashboard: score distribution, top 20, DQ failures over runs.
-- [ ] Ask the reviewer agent for a full-repo review; fix the blocking comments.
+- [x] README: problem, the diagram, a results sample, how to run, limitations, an ADR index.
+- [x] AI/BI dashboard: score distribution, top 20, DQ failures over runs.
+- [x] Ask the reviewer agent for a full-repo review; fix the blocking comments.
 
 ## Testing, data quality, CI/CD and monitoring
 
