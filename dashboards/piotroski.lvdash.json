@@ -48,7 +48,7 @@
             "name": "disclaimer",
             "multilineTextboxSpec": {
               "lines": [
-                "**Not financial advice.** Scores come from automated parsing of public ESEF filings and may be wrong or incomplete. See the project README for definitions and known limitations.\n"
+                "#### **Not financial advice.** Scores come from automated parsing of public ESEF filings and may be wrong or incomplete. See the project README for definitions and known limitations.\n"
               ]
             }
           },
